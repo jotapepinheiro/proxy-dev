@@ -1,0 +1,78 @@
+# DOCKER
+
+## O que este repositório contém
+
+- [Mysql v8.0.32][l-mysql]
+- [Postgres v13][l-postgres]
+- [Redis][l-redis]
+- [Redis Web-UI][l-redis-web-ui]
+- [Sonar Qube][l-sonarqube]
+- [Mailtip][l-mailpit]
+
+---
+
+```shell script
+# Comandos disponíveis no arquivo Makefile
+make help
+```
+
+```shell script
+# Iniciar containers
+docker compose up -d
+```
+
+```shell script
+# Desligar containers
+docker compose down
+```
+
+```shell script
+# Rebuild Todos Container
+docker compose down && docker compose up -d --build
+```
+
+```shell script
+# Limpar Redis
+docker exec -it proxydev-redis redis-cli flushall
+```
+
+---
+
+### Editar Arquivo de Hosts
+
+```text
+## No Windows:
+C:\Windows\System32\drivers\etc\hosts
+
+## No Linux/Mac:
+/etc/hosts
+
+########################
+
+127.0.0.1       redis
+127.0.0.1       mysql
+127.0.0.1       postgres
+127.0.0.1       mailpit
+127.0.0.1       sonar
+```
+
+---
+
+### Redis Web
+
+> <http://redis:9987>
+
+### Mailpit Web
+
+> <http://mailpit:9987>
+
+### SonarQube Web
+
+> <http://sonar:9000>
+
+[l-postgres]: https://hub.docker.com/_/postgres
+[l-mysql]: https://hub.docker.com/_/mysql
+[l-redis]: https://hub.docker.com/_/redis
+[l-redis-web-ui]: https://github.com/erikdubbelboer/phpRedisAdmin
+[l-mailpit]: https://github.com/axllent/mailpit
+[l-sonarqube]: https://docs.sonarsource.com/sonarqube/latest/
