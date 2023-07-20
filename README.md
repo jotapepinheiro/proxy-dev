@@ -36,6 +36,21 @@ docker compose down && docker compose up -d --build
 docker exec -it proxydev-redis redis-cli flushall
 ```
 
+## Instalar Sonar Scanner
+
+```shell script
+## Instalar pacote brew
+brew install sonar-scanner
+
+## Executar comando na raiz de cada projeto
+sonar-scanner \
+  -Dsonar.projectKey=microservices_customer_card_AYFjiSo1TwWNWyaxqqCA \
+  -Dsonar.sources=app \
+  -Dsonar.host.url=http://sonar:9000 \
+  -Dsonar.token=sqp_c2f893a5436c8cf01144bf31f81850803942b8e4
+
+```
+
 ---
 
 ### Editar Arquivo de Hosts
