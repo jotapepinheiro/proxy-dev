@@ -12,6 +12,11 @@
 ---
 
 ```shell script
+# Copiar arquivo .env.exemple para .env
+cp .env.example .env 
+```
+
+```shell script
 # Comandos disponíveis no arquivo Makefile
 make help
 ```

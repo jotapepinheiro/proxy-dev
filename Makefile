@@ -1,5 +1,5 @@
-PATH  := $(PATH):$(pwd)/bin:
-SHELL := env PATH=$(PATH) /bin/bash
+PATH  := $(PATH):$(PWD)/bin:
+SHELL := /bin/bash
 
 .PHONY: help
 .DEFAULT_GOAL = help
