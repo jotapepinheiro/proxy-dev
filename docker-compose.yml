@@ -1,27 +1,6 @@
-version: '3.8'
+name: proxy-dev
 
 services:
-
-  sonarqube:
-    container_name: ${CONTAINER_NAME}-sonarqube
-    build:
-      context: ./docker/sonarqube
-    restart: always
-    hostname: sonarqube
-    environment:
-      SONAR_JDBC_URL: jdbc:postgresql://postgres:${POSTGRES_DB_PORT:-5432}/sonarqube
-      SONAR_JDBC_USERNAME: ${POSTGRES_USER:-proxydev}
-      SONAR_JDBC_PASSWORD: ${POSTGRES_PASSWORD:-proxydev}
-    volumes:
-      - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_extensions:/opt/sonarqube/extensions
-      - sonarqube_logs:/opt/sonarqube/logs
-    ports:
-      - "${SONARQUBE_PORT:-9000}:9000"
-    depends_on:
-      - postgres
-    networks:
-      - proxydev
 
   postgres:
     container_name: ${CONTAINER_NAME}-postgres
@@ -34,7 +13,7 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-proxydev}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-proxydev}
-      POSTGRES_DB: sonarqube
+      POSTGRES_DB: ${POSTGRES_DB:-proxydev}
       TZ: ${CONTAINER_TIMEZONE:-America/Sao_Paulo}
       PGTZ: ${CONTAINER_TIMEZONE:-America/Sao_Paulo}
     volumes:
@@ -43,7 +22,7 @@ services:
     ports:
       - "${POSTGRES_DB_PORT:-5432}:5432"
     networks:
-      - proxydev
+      - jp-networks
 
   mysql:
     container_name: ${CONTAINER_NAME}-mysql
@@ -64,7 +43,7 @@ services:
     ports:
       - "${MYSQL_DB_PORT:-3306}:3306"
     networks:
-      - proxydev
+      - jp-networks
 
   redis:
     container_name: ${CONTAINER_NAME}-redis
@@ -78,32 +57,7 @@ services:
     ports:
       - "${REDIS_PORT:-6379}:6379"
     networks:
-      - proxydev
-
-  redis-webui:
-    container_name: ${CONTAINER_NAME}-redis-webui
-    build:
-      context: ./docker/redis-webui
-    environment:
-      - ADMIN_USER=${REDIS_WEBUI_USERNAME:-proxydev}
-      - ADMIN_PASS=${REDIS_WEBUI_PASSWORD:-proxydev}
-      - REDIS_1_AUTH=${REDIS_PASSWORD:-proxydev}
-      - REDIS_1_HOST=${REDIS_WEBUI_CONNECT_HOST:-127.0.0.1}
-      - REDIS_1_PORT=${REDIS_WEBUI_CONNECT_PORT:-6379}
-    ports:
-      - "${REDIS_WEBUI_PORT:-9987}:80"
-    depends_on:
-      - redis
-    networks:
-      - proxydev
-    deploy:
-      resources:
-        limits:
-          cpus: '0.2'
-          memory: 64M
-        reservations:
-          cpus: '0.05'
-          memory: 8M
+      - jp-networks
 
   mailpit:
     container_name: ${CONTAINER_NAME}-mailpit
@@ -113,7 +67,7 @@ services:
       - '${MAILTIP_PORT:-1025}:1025'
       - '${MAILTIP_PORT_DASHBOARD:-8025}:8025'
     networks:
-      - proxydev
+      - jp-networks
     deploy:
       resources:
         limits:
@@ -123,15 +77,23 @@ services:
           cpus: '0.05'
           memory: 8M
 
+  nginx:
+    container_name: ${CONTAINER_NAME}-nginx
+    image: nginx:1.27-alpine
+    restart: always
+    volumes:
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    networks:
+      - jp-networks
+
 networks:
-  proxydev:
-    driver: bridge
+  jp-networks:
+    external: true
 
 volumes:
   proxydev_mysql:
   proxydev_redis:
   proxydev_postgresql:
   proxydev_postgresql_data:
-  sonarqube_data:
-  sonarqube_extensions:
-  sonarqube_logs:

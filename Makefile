@@ -10,9 +10,6 @@ CONTAINER = proxydev
 docker-start: ## Iniciar Docker
 	docker compose up -d
 
-docker-start-sonar: ## Iniciar Docker somente com Sonar
-	docker compose up -d sonarqube postgres
-
 docker-build: ## Iniciar Docker com build
 	docker compose up -d --build
 
