@@ -63,6 +63,7 @@ services:
     container_name: ${CONTAINER_NAME}-mailpit
     build:
       context: ./docker/mailpit
+    restart: always
     ports:
       - '${MAILTIP_PORT:-1025}:1025'
       - '${MAILTIP_PORT_DASHBOARD:-8025}:8025'
@@ -77,14 +78,18 @@ services:
           cpus: '0.05'
           memory: 8M
 
-  nginx:
-    container_name: ${CONTAINER_NAME}-nginx
-    image: nginx:1.27-alpine
+  caddy:
+    container_name: ${CONTAINER_NAME}-caddy
+    build:
+      context: ./docker/caddy
     restart: always
     volumes:
-      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
     ports:
-      - "${NGINX_PORT:-80}:80"
+      - "${CADDY_PORT:-80}:80"
+      - "${CADDY_TLS_PORT:-443}:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - jp-networks
 

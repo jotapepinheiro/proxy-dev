@@ -1,0 +1,7 @@
+mc.local:80 {
+	reverse_proxy host.docker.internal:4000
+}
+
+giftlist.local:80 {
+	reverse_proxy host.docker.internal:5173
+}

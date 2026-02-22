@@ -6,6 +6,7 @@
 - [Postgres v13][l-postgres]
 - [Redis][l-redis]
 - [Mailtip][l-mailpit]
+- [Caddy][l-caddy]
 
 ---
 
@@ -62,6 +63,7 @@ C:\Windows\System32\drivers\etc\hosts
 127.0.0.1       postgres
 127.0.0.1       mailpit
 127.0.0.1       sonar
+127.0.0.1       mc.local
 ```
 
 ---
@@ -78,3 +80,4 @@ C:\Windows\System32\drivers\etc\hosts
 [l-mysql]: https://hub.docker.com/_/mysql
 [l-redis]: https://hub.docker.com/_/redis
 [l-mailpit]: https://github.com/axllent/mailpit
+[l-caddy]: https://hub.docker.com/_/caddy
