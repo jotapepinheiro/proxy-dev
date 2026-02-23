@@ -1,7 +1,19 @@
+{
+  email mail@proxydev.local
+}
+
 mc.local:80 {
 	reverse_proxy host.docker.internal:4000
 }
 
-giftlist.local:80 {
-	reverse_proxy host.docker.internal:5173
+# Frontend
+gifzy.test:80 {
+    # tls internal
+    reverse_proxy host.docker.internal:5173
+}
+
+# Backend
+api.gifzy.test:80 {
+    # tls internal
+    reverse_proxy host.docker.internal:5500
 }
