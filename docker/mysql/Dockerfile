@@ -1,4 +1,4 @@
-ARG MYSQL_VERSION
+ARG MYSQL_VERSION=8.0
 FROM mysql/mysql-server:${MYSQL_VERSION}
 
 #####################################

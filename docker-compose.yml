@@ -7,7 +7,7 @@ services:
     build:
       context: ./docker/postgres
       args:
-        - POSTGRES_VERSION=${POSTGRES_VERSION:-13}
+        - POSTGRES_VERSION=${POSTGRES_VERSION:-17}
     restart: always
     hostname: postgresql
     environment:
@@ -19,6 +19,7 @@ services:
     volumes:
       - proxydev_postgresql:/var/lib/postgresql
       - proxydev_postgresql_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "${POSTGRES_DB_PORT:-5432}:5432"
     networks:
