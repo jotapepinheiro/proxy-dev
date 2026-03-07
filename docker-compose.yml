@@ -18,7 +18,6 @@ services:
       PGTZ: ${CONTAINER_TIMEZONE:-America/Sao_Paulo}
     volumes:
       - proxydev_postgresql:/var/lib/postgresql
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "${POSTGRES_DB_PORT:-5432}:5432"
     networks:
