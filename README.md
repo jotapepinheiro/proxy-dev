@@ -7,6 +7,7 @@
 - [Redis][l-redis]
 - [Mailtip][l-mailpit]
 - [Caddy][l-caddy]
+- [Durabull][l-durabull]
 
 ---
 
@@ -76,8 +77,13 @@ C:\Windows\System32\drivers\etc\hosts
 
 > <http://mailpit:9987>
 
+### Durabull Web
+
+> <http://localhost:3000>
+
 [l-postgres]: https://hub.docker.com/_/postgres
 [l-mysql]: https://hub.docker.com/_/mysql
 [l-redis]: https://hub.docker.com/_/redis
 [l-mailpit]: https://github.com/axllent/mailpit
 [l-caddy]: https://hub.docker.com/_/caddy
+[l-durabull]: https://durabull.io/documentation/self-hosting/installation

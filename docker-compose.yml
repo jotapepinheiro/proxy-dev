@@ -93,6 +93,33 @@ services:
     networks:
       - jp-networks
 
+  durabull:
+    container_name: ${CONTAINER_NAME}-durabull
+    image: ghcr.io/durabullhq/durabull:latest
+    restart: always
+    depends_on:
+      - redis
+    environment:
+      AUTH_SECRET: ${DURABULL_AUTH_SECRET:-durabull-secret}
+      AUTHLESS: ${DURABULL_AUTHLESS:-true}
+      APP_BASE_URL: ${DURABULL_APP_BASE_URL:-http://localhost:3030}
+      VITE_PUBLIC_APP_URL: ${DURABULL_APP_BASE_URL:-http://localhost:3030}
+      DURABULL_ENV_CONNECTIONS: ${DURABULL_ENV_CONNECTIONS:-true}
+      DURABULL_REDIS_URL_DEV: ${DURABULL_REDIS_URL_DEV:-redis://:${REDIS_PASSWORD:-proxydev}@redis:6379}
+      DURABULL_REDIS_URL_DEV_ENVIRONMENT: ${DURABULL_REDIS_URL_DEV_ENVIRONMENT:-development}
+      DURABULL_REDIS_URL_PROD: ${DURABULL_REDIS_URL_PROD:-redis://:pass@localhost:6380/0}
+      DURABULL_REDIS_URL_PROD_ENVIRONMENT: ${DURABULL_REDIS_URL_PROD_ENVIRONMENT:-production}
+      DURABULL_REDIS_URL_DEFAULT: ${DURABULL_REDIS_URL_DEFAULT:-DEV}
+      DURABULL_REDIS_URL_ENCRYPTION_KEY: ${DURABULL_REDIS_URL_ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      DURABULL_PGLITE_DIR: /app/data
+      PORT: ${DURABULL_INTERNAL_PORT:-3030}
+    volumes:
+      - proxydev_durabull_data:/app/data
+    ports:
+      - "${DURABULL_PORT:-3030}:${DURABULL_INTERNAL_PORT:-3030}"
+    networks:
+      - jp-networks
+
 networks:
   jp-networks:
     external: true
@@ -102,3 +129,4 @@ volumes:
   proxydev_redis:
   proxydev_postgresql:
   proxydev_caddy_data:
+  proxydev_durabull_data:
