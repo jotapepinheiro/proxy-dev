@@ -3,7 +3,7 @@ name: proxy-dev
 services:
 
   postgres:
-    container_name: ${CONTAINER_NAME}-postgres
+    container_name: ${CONTAINER_NAME:-proxydev}-postgres
     build:
       context: ./docker/postgres
       args:
@@ -24,7 +24,7 @@ services:
       - jp-networks
 
   mysql:
-    container_name: ${CONTAINER_NAME}-mysql
+    container_name: ${CONTAINER_NAME:-proxydev}-mysql
     build:
       context: ./docker/mysql
       args:
@@ -45,7 +45,7 @@ services:
       - jp-networks
 
   redis:
-    container_name: ${CONTAINER_NAME}-redis
+    container_name: ${CONTAINER_NAME:-proxydev}-redis
     build:
       context: ./docker/redis
     restart: always
@@ -59,7 +59,7 @@ services:
       - jp-networks
 
   mailpit:
-    container_name: ${CONTAINER_NAME}-mailpit
+    container_name: ${CONTAINER_NAME:-proxydev}-mailpit
     build:
       context: ./docker/mailpit
     restart: always
@@ -78,7 +78,7 @@ services:
           memory: 8M
 
   caddy:
-    container_name: ${CONTAINER_NAME}-caddy
+    container_name: ${CONTAINER_NAME:-proxydev}-caddy
     build:
       context: ./docker/caddy
     restart: always
@@ -94,7 +94,7 @@ services:
       - jp-networks
 
   durabull:
-    container_name: ${CONTAINER_NAME}-durabull
+    container_name: ${CONTAINER_NAME:-proxydev}-durabull
     image: ghcr.io/durabullhq/durabull:latest
     restart: always
     depends_on:

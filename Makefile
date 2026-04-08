@@ -1,10 +1,16 @@
 PATH  := $(PATH):$(PWD)/bin:
 SHELL := /bin/bash
 
+ifneq (,$(wildcard ./.env))
+include .env
+export
+endif
+
 .PHONY: help
 .DEFAULT_GOAL = help
 
-CONTAINER = proxydev
+CONTAINER ?= $(CONTAINER_NAME)
+CONTAINER ?= proxydev
 
 ## —— Docker 🐳  ———————————————————————————————————————————————————————————————
 docker-start: ## Iniciar Docker
@@ -27,4 +33,3 @@ help: ## Lista de commandos
 	@grep -E '(^[a-zA-Z_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) \
 	| awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-24s\033[0m %s\n", $$1, $$2}' \
 	| sed -e 's/\[32m## /[33m/' && printf "\n"
-

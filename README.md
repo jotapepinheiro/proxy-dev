@@ -1,89 +1,62 @@
-# DOCKER
+# Proxy Dev
 
-Este projeto cria um ambiente local de desenvolvimento com Docker Compose para subir rapidamente servicos de infraestrutura usados no dia a dia. Ele centraliza banco de dados, cache, envio de emails para testes e proxy web em um unico stack, facilitando a configuracao de novos projetos e a padronizacao do ambiente entre equipes.
+Stack Docker Compose para desenvolvimento local com serviços de infraestrutura compartilhados.
 
-## O que este repositório contém
+## Serviços do stack
 
-- [Mysql v8.0.32][l-mysql]
-- [Postgres v13][l-postgres]
+- [MySQL 8.0.32][l-mysql]
+- [PostgreSQL (pgvector) 18][l-postgres]
 - [Redis][l-redis]
-- [Mailtip][l-mailpit]
+- [Mailpit][l-mailpit]
 - [Caddy][l-caddy]
 - [Durabull][l-durabull]
 
----
+## Setup rápido
 
 ```bash
-# Instale a Rede Externa do Docker
+# 1) Crie a rede externa (uma única vez)
 docker network create jp-networks
-```
 
-```bash
-# Copiar arquivo .env.exemple para .env
-cp .env.example .env 
-```
+# 2) Copie as variáveis de ambiente
+cp .env.example .env
 
-```bash
-# Comandos disponíveis no arquivo Makefile
+# 3) Veja os comandos disponíveis
 make help
+
+# 4) Suba os containers
+make docker-start
 ```
+
+Comandos úteis:
 
 ```bash
-# Iniciar containers
-docker compose up -d
+make docker-build        # sobe com rebuild
+make docker-stop         # derruba o stack
+make docker-rebuild-all  # down + build + up
+make flush-redis         # limpa cache Redis
 ```
 
-```bash
-# Desligar containers
-docker compose down
-```
+## Hosts locais (opcional)
 
-```bash
-# Rebuild Todos Container
-docker compose down && docker compose up -d --build
-```
-
-```bash
-# Limpar Redis
-docker exec -it proxydev-redis redis-cli flushall
-```
-
----
-
-### Editar Arquivo de Hosts
+Para usar os domínios do Caddy (`mc.local`, `gifzy.test`, `api.gifzy.test`), adicione:
 
 ```text
-## No Windows:
-C:\Windows\System32\drivers\etc\hosts
-
-## No Linux/Mac:
-/etc/hosts
-
-########################
-
-127.0.0.1       redis
-127.0.0.1       mysql
-127.0.0.1       postgres
-127.0.0.1       mailpit
-127.0.0.1       sonar
-127.0.0.1       mc.local
+127.0.0.1 mc.local
+127.0.0.1 gifzy.test
+127.0.0.1 api.gifzy.test
 ```
 
----
+Arquivo de hosts:
 
-### Redis Web
+- Windows: `C:\Windows\System32\drivers\etc\hosts`
+- Linux/macOS: `/etc/hosts`
 
-> <http://redis:9987>
+## Acessos web
 
-### Mailpit Web
+- Mailpit UI: <http://localhost:8025>
+- Durabull UI: <http://localhost:3030>
 
-> <http://mailpit:9987>
-
-### Durabull Web
-
-> <http://localhost:3000>
-
-[l-postgres]: https://hub.docker.com/_/postgres
+[l-postgres]: https://hub.docker.com/r/pgvector/pgvector
 [l-mysql]: https://hub.docker.com/_/mysql
 [l-redis]: https://hub.docker.com/_/redis
 [l-mailpit]: https://github.com/axllent/mailpit
