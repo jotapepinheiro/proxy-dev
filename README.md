@@ -1,5 +1,7 @@
 # DOCKER
 
+Este projeto cria um ambiente local de desenvolvimento com Docker Compose para subir rapidamente servicos de infraestrutura usados no dia a dia. Ele centraliza banco de dados, cache, envio de emails para testes e proxy web em um unico stack, facilitando a configuracao de novos projetos e a padronizacao do ambiente entre equipes.
+
 ## O que este repositório contém
 
 - [Mysql v8.0.32][l-mysql]
