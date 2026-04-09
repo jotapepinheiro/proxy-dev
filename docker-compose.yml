@@ -95,7 +95,8 @@ services:
 
   durabull:
     container_name: ${CONTAINER_NAME:-proxydev}-durabull
-    image: ghcr.io/durabullhq/durabull:latest
+    build:
+      context: ./docker/durabull
     restart: always
     depends_on:
       - redis
