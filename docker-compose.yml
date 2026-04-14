@@ -1,5 +1,50 @@
 name: proxy-dev
 
+x-common-service: &common-service
+  build:
+    context: ./docker/firecrawl
+  ulimits:
+    nofile:
+      soft: 65535
+      hard: 65535
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  restart: unless-stopped
+  networks:
+    - jp-networks
+
+x-common-env: &common-env
+  REDIS_URL: ${REDIS_URL}/1
+  REDIS_RATE_LIMIT_URL: ${REDIS_URL}/1
+  PLAYWRIGHT_MICROSERVICE_URL: ${FIRECRAWL_PLAYWRIGHT_MICROSERVICE_URL:-http://playwright-service:3000/scrape}
+  POSTGRES_USER: ${FIRECRAWL_POSTGRES_USER:-postgres}
+  POSTGRES_PASSWORD: ${FIRECRAWL_POSTGRES_PASSWORD:-postgres}
+  POSTGRES_DB: ${FIRECRAWL_POSTGRES_DB:-postgres}
+  POSTGRES_HOST: ${FIRECRAWL_POSTGRES_HOST:-nuq-postgres}
+  POSTGRES_PORT: ${FIRECRAWL_POSTGRES_PORT:-5432}
+  USE_DB_AUTHENTICATION: ${FIRECRAWL_USE_DB_AUTHENTICATION:-false}
+  NUM_WORKERS_PER_QUEUE: ${FIRECRAWL_NUM_WORKERS_PER_QUEUE:-8}
+  CRAWL_CONCURRENT_REQUESTS: ${FIRECRAWL_CRAWL_CONCURRENT_REQUESTS:-10}
+  MAX_CONCURRENT_JOBS: ${FIRECRAWL_MAX_CONCURRENT_JOBS:-5}
+  BROWSER_POOL_SIZE: ${FIRECRAWL_BROWSER_POOL_SIZE:-5}
+  OPENAI_API_KEY: ${FIRECRAWL_OPENAI_API_KEY:-}
+  OPENAI_BASE_URL: ${FIRECRAWL_OPENAI_BASE_URL:-}
+  MODEL_NAME: ${FIRECRAWL_MODEL_NAME:-}
+  MODEL_EMBEDDING_NAME: ${FIRECRAWL_MODEL_EMBEDDING_NAME:-}
+  OLLAMA_BASE_URL: ${FIRECRAWL_OLLAMA_BASE_URL:-}
+  AUTUMN_SECRET_KEY: ${FIRECRAWL_AUTUMN_SECRET_KEY:-}
+  SLACK_WEBHOOK_URL: ${FIRECRAWL_SLACK_WEBHOOK_URL:-}
+  BULL_AUTH_KEY: ${FIRECRAWL_BULL_AUTH_KEY:-CHANGEME}
+  TEST_API_KEY: ${FIRECRAWL_TEST_API_KEY:-}
+  SUPABASE_ANON_TOKEN: ${FIRECRAWL_SUPABASE_ANON_TOKEN:-}
+  SUPABASE_URL: ${FIRECRAWL_SUPABASE_URL:-}
+  SUPABASE_SERVICE_TOKEN: ${FIRECRAWL_SUPABASE_SERVICE_TOKEN:-}
+  SELF_HOSTED_WEBHOOK_URL: ${FIRECRAWL_SELF_HOSTED_WEBHOOK_URL:-}
+  LOGGING_LEVEL: ${FIRECRAWL_LOGGING_LEVEL:-WARN}
+  PROXY_SERVER: ${FIRECRAWL_PROXY_SERVER:-}
+  PROXY_USERNAME: ${FIRECRAWL_PROXY_USERNAME:-}
+  PROXY_PASSWORD: ${FIRECRAWL_PROXY_PASSWORD:-}
+
 services:
 
   postgres:
@@ -58,6 +103,30 @@ services:
     networks:
       - jp-networks
 
+  rabbitmq:
+    container_name: ${CONTAINER_NAME:-proxydev}-rabbitmq
+    build:
+      context: ./docker/rabbitmq
+    hostname: rabbitmq
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-proxydev}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-proxydev}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit ${RABBITMQ_DISK_FREE_LIMIT}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - proxydev_rabbitmq:/var/lib/rabbitmq
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_TLS_PORT:-15672}:15672"
+    networks:
+      - jp-networks
+
   mailpit:
     container_name: ${CONTAINER_NAME:-proxydev}-mailpit
     build:
@@ -107,7 +176,7 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-key_test_1234567890}
       VITE_PUBLIC_APP_URL: ${DURABULL_APP_BASE_URL:-http://localhost:3030}
       DURABULL_ENV_CONNECTIONS: ${DURABULL_ENV_CONNECTIONS:-true}
-      DURABULL_REDIS_URL_DEV: ${DURABULL_REDIS_URL_DEV:-redis://:${REDIS_PASSWORD:-proxydev}@redis:6379}
+      DURABULL_REDIS_URL_DEV: ${DURABULL_REDIS_URL_DEV:-redis://:${REDIS_PASSWORD:-proxydev}@redis:6379/0}
       DURABULL_REDIS_URL_DEV_ENVIRONMENT: ${DURABULL_REDIS_URL_DEV_ENVIRONMENT:-development}
       DURABULL_REDIS_URL_PROD: ${DURABULL_REDIS_URL_PROD:-redis://:pass@localhost:6380/0}
       DURABULL_REDIS_URL_PROD_ENVIRONMENT: ${DURABULL_REDIS_URL_PROD_ENVIRONMENT:-production}
@@ -122,6 +191,84 @@ services:
     networks:
       - jp-networks
 
+  nuq-postgres:
+    container_name: ${CONTAINER_NAME:-proxydev}-nuq-postgres
+    build:
+      context: ./docker/firecrawl/nuq-postgres
+    platform: linux/amd64
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${FIRECRAWL_POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${FIRECRAWL_POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${FIRECRAWL_POSTGRES_DB:-postgres}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${FIRECRAWL_POSTGRES_USER:-postgres} -d ${FIRECRAWL_POSTGRES_DB:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - proxydev_firecrawl_nuq_postgresql:/var/lib/postgresql/data
+    networks:
+      - jp-networks
+
+  playwright-service:
+    container_name: ${CONTAINER_NAME:-proxydev}-playwright-service
+    build:
+      context: ./docker/firecrawl/playwright-service
+    shm_size: "2gb"
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      PROXY_SERVER: ${FIRECRAWL_PROXY_SERVER:-}
+      PROXY_USERNAME: ${FIRECRAWL_PROXY_USERNAME:-}
+      PROXY_PASSWORD: ${FIRECRAWL_PROXY_PASSWORD:-}
+      ALLOW_LOCAL_WEBHOOKS: ${FIRECRAWL_ALLOW_LOCAL_WEBHOOKS:-false}
+      BLOCK_MEDIA: ${FIRECRAWL_BLOCK_MEDIA:-false}
+      MAX_CONCURRENT_PAGES: ${FIRECRAWL_CRAWL_CONCURRENT_REQUESTS:-10}
+    networks:
+      - jp-networks
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 2G
+
+  firecrawl:
+    container_name: ${CONTAINER_NAME:-proxydev}-firecrawl
+    <<: *common-service
+    environment:
+      <<: *common-env
+      HOST: "0.0.0.0"
+      PORT: ${FIRECRAWL_INTERNAL_PORT:-3002}
+      EXTRACT_WORKER_PORT: ${FIRECRAWL_EXTRACT_WORKER_PORT:-3004}
+      WORKER_PORT: ${FIRECRAWL_WORKER_PORT:-3005}
+      NUQ_RABBITMQ_URL: ${RABBITMQ_URL}
+      ENV: production
+    depends_on:
+      redis:
+        condition: service_started
+      playwright-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      nuq-postgres:
+        condition: service_healthy
+    command: node dist/src/harness.js --start-docker
+    ports:
+      - "${FIRECRAWL_PORT:-3002}:${FIRECRAWL_INTERNAL_PORT:-3002}"
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 6G
+        reservations:
+          cpus: "1.0"
+          memory: 2G
+
 networks:
   jp-networks:
     external: true
@@ -129,6 +276,8 @@ networks:
 volumes:
   proxydev_mysql:
   proxydev_redis:
+  proxydev_rabbitmq:
   proxydev_postgresql:
   proxydev_caddy_data:
   proxydev_durabull_data:
+  proxydev_firecrawl_nuq_postgresql:

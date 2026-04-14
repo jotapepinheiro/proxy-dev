@@ -7,9 +7,11 @@ Ambiente local de desenvolvimento com Docker Compose para subir rapidamente serv
 - [MySQL v8.4][l-mysql]
 - [PostgreSQL (pgvector) 18][l-postgres]
 - [Redis][l-redis]
+- [RabbitMQ][l-rabbitmq]
 - [Mailpit][l-mailpit] — servidor SMTP para captura de emails em desenvolvimento
 - [Caddy][l-caddy] — proxy reverso com suporte a HTTPS automático
 - [Durabull][l-durabull] — interface web para gerenciamento de filas Redis
+- [Firecrawl][l-firecrawl] — API de crawling/scraping self-hosted
 
 ## Pré-requisitos
 
@@ -70,11 +72,14 @@ make flush-redis
 | PostgreSQL | 5432  | Banco de dados             |
 | MySQL      | 3306  | Banco de dados             |
 | Redis      | 6379  | Cache / filas              |
+| RabbitMQ   | 5672  | Broker AMQP                |
+| RabbitMQ   | 15672 | Management UI              |
 | Mailpit    | 1025  | SMTP (envio de emails)     |
 | Mailpit    | 8025  | Dashboard web              |
 | Caddy      | 80    | HTTP proxy                 |
 | Caddy      | 443   | HTTPS proxy                |
 | Durabull   | 3030  | Interface web              |
+| Firecrawl  | 3002  | API web                    |
 
 > As portas podem ser alteradas no arquivo `.env`.
 
@@ -82,6 +87,78 @@ make flush-redis
 
 - **Mailpit Dashboard:** <http://localhost:8025>
 - **Durabull:** <http://localhost:3030>
+- **RabbitMQ Management:** <http://localhost:15672>
+- **Firecrawl API:** <http://localhost:3002>
+- **Firecrawl Queue UI:** `http://localhost:3002/admin/${FIRECRAWL_BULL_AUTH_KEY}/queues`
+
+## Firecrawl — configuração rápida
+
+O Firecrawl foi adicionado com três serviços de apoio:
+
+- `rabbitmq` (broker de filas)
+- `nuq-postgres` (PostgreSQL interno do Firecrawl)
+- `playwright-service` (renderização/navegação headless)
+
+Variáveis principais no `.env`:
+
+- `RABBITMQ_URL` (usada pelo Firecrawl em `NUQ_RABBITMQ_URL`)
+- `FIRECRAWL_BULL_AUTH_KEY` (protege a Queue UI em `/admin/<key>/queues`)
+- `FIRECRAWL_OPENAI_BASE_URL` + `FIRECRAWL_OPENAI_API_KEY` (modo OpenAI compatível, incluindo Ollama via `/v1`)
+- `FIRECRAWL_MODEL_NAME` e `FIRECRAWL_MODEL_EMBEDDING_NAME`
+
+Se você manteve os padrões do `.env.example`, a Queue UI fica em:
+
+- `http://localhost:3002/admin/CHANGEME/queues`
+
+## Firecrawl — testes rápidos
+
+### 1. Testar scrape de uma única URL
+
+```bash
+curl -sS -X POST "http://localhost:3002/v1/scrape" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com",
+    "formats": ["markdown"]
+  }' | jq
+```
+
+Para exibir só o Markdown:
+
+```bash
+curl -sS -X POST "http://localhost:3002/v1/scrape" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com","formats":["markdown"]}' \
+  | jq -r '.data.markdown'
+```
+
+### 2. Testar crawl (várias páginas) e recuperar por `id`
+
+Iniciar crawl:
+
+```bash
+curl -sS -X POST "http://localhost:3002/v1/crawl" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://www.example.com",
+    "limit": 5,
+    "scrapeOptions": { "formats": ["markdown"] }
+  }' | jq
+```
+
+Consultar resultado do crawl:
+
+```bash
+curl -sS "http://localhost:3002/v1/crawl/$ID" | jq
+```
+
+Exibir somente os conteúdos em Markdown:
+
+```bash
+curl -sS "http://localhost:3002/v1/crawl/$ID" | jq -r '.data[].markdown'
+```
+
+Se a resposta retornar o campo `next`, faça uma nova chamada para a URL de `next` para paginar os resultados.
 
 ## Editar arquivo de hosts
 
@@ -104,7 +181,7 @@ O Caddy é configurado via `docker/caddy/Caddyfile`. Ele usa `host.docker.intern
 
 ## Credenciais padrão
 
-Todos os serviços usam `proxydev` como usuário e senha padrão. Veja `.env.example` para a lista completa de variáveis.
+A maior parte dos serviços usa `proxydev` como usuário/senha padrão. Exceção: no stack do Firecrawl, `FIRECRAWL_POSTGRES_*` usa `postgres/postgres/postgres` por padrão. Veja `.env.example` para a lista completa.
 
 [l-postgres]: https://hub.docker.com/r/pgvector/pgvector
 [l-mysql]: https://hub.docker.com/_/mysql
@@ -112,3 +189,5 @@ Todos os serviços usam `proxydev` como usuário e senha padrão. Veja `.env.exa
 [l-mailpit]: https://github.com/axllent/mailpit
 [l-caddy]: https://hub.docker.com/_/caddy
 [l-durabull]: https://durabull.io/documentation/self-hosting/installation
+[l-rabbitmq]: https://www.rabbitmq.com/docs
+[l-firecrawl]: https://github.com/firecrawl/firecrawl
