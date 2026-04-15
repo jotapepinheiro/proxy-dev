@@ -61,6 +61,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-proxydev}
       TZ: ${CONTAINER_TIMEZONE:-America/Sao_Paulo}
       PGTZ: ${CONTAINER_TIMEZONE:-America/Sao_Paulo}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-proxydev} -d ${POSTGRES_DB:-proxydev}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     volumes:
       - proxydev_postgresql:/var/lib/postgresql
     ports:
@@ -100,6 +105,11 @@ services:
     command: redis-server --requirepass ${REDIS_PASSWORD:-proxydev}
     ports:
       - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
       - jp-networks
 
