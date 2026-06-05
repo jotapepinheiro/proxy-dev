@@ -55,6 +55,16 @@ services:
         - POSTGRES_VERSION=${POSTGRES_VERSION:-18}
     restart: always
     hostname: postgresql
+    command:
+        - postgres
+        - -c
+        - shared_buffers=1GB
+        - -c
+        - maintenance_work_mem=512MB
+        - -c
+        - max_wal_size=4GB
+        - -c
+        - effective_cache_size=3GB
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-proxydev}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-proxydev}
@@ -72,6 +82,14 @@ services:
       - "${POSTGRES_DB_PORT:-5432}:5432"
     networks:
       - jp-networks
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 4G
+        reservations:
+          cpus: "0.25"
+          memory: 512M
 
   mysql:
     container_name: ${CONTAINER_NAME:-proxydev}-mysql
@@ -93,6 +111,14 @@ services:
       - "${MYSQL_DB_PORT:-3306}:3306"
     networks:
       - jp-networks
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+        reservations:
+          cpus: "0.25"
+          memory: 512M
 
   redis:
     container_name: ${CONTAINER_NAME:-proxydev}-redis
@@ -102,7 +128,7 @@ services:
     volumes:
       - proxydev_redis:/data
       - ${REDIS_LOG_PATH:-./docker/logs/redis}:/var/log/redis
-    command: redis-server --requirepass ${REDIS_PASSWORD:-proxydev}
+    command: redis-server --requirepass ${REDIS_PASSWORD:-proxydev} --maxmemory 768mb --maxmemory-policy volatile-lru
     ports:
       - "${REDIS_PORT:-6379}:6379"
     healthcheck:
@@ -112,6 +138,14 @@ services:
       retries: 10
     networks:
       - jp-networks
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+        reservations:
+          cpus: "0.05"
+          memory: 256M
 
   rabbitmq:
     container_name: ${CONTAINER_NAME:-proxydev}-rabbitmq
@@ -136,6 +170,14 @@ services:
       - "${RABBITMQ_TLS_PORT:-15672}:15672"
     networks:
       - jp-networks
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 768M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
 
   mailpit:
     container_name: ${CONTAINER_NAME:-proxydev}-mailpit
@@ -151,7 +193,7 @@ services:
       resources:
         limits:
           cpus: '0.2'
-          memory: 64M
+          memory: 128M
         reservations:
           cpus: '0.05'
           memory: 8M
@@ -171,6 +213,14 @@ services:
       - "host.docker.internal:host-gateway"
     networks:
       - jp-networks
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 32M
 
   durabull:
     container_name: ${CONTAINER_NAME:-proxydev}-durabull
@@ -200,6 +250,14 @@ services:
       - "${DURABULL_PORT:-3030}:${DURABULL_INTERNAL_PORT:-3030}"
     networks:
       - jp-networks
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+        reservations:
+          cpus: "0.1"
+          memory: 512M
 
   nuq-postgres:
     container_name: ${CONTAINER_NAME:-proxydev}-nuq-postgres
@@ -221,6 +279,14 @@ services:
       - proxydev_firecrawl_nuq_postgresql:/var/lib/postgresql/data
     networks:
       - jp-networks
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
 
   playwright-service:
     container_name: ${CONTAINER_NAME:-proxydev}-playwright-service
@@ -273,11 +339,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "4.0"
-          memory: 6G
+          cpus: "3.0"
+          memory: 4G
         reservations:
           cpus: "1.0"
-          memory: 2G
+          memory: 1G
 
 networks:
   jp-networks:

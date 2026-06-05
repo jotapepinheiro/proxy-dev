@@ -1,4 +1,4 @@
-FROM redis:latest
+FROM redis:8.4-alpine
 
 VOLUME /data
 
