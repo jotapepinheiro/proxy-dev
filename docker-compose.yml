@@ -222,6 +222,22 @@ services:
           cpus: "0.05"
           memory: 32M
 
+  cloudflared:
+    container_name: ${CONTAINER_NAME:-proxydev}-cloudflared
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TOKEN:-default-token}
+    networks:
+      - jp-networks
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 32M
+
   durabull:
     container_name: ${CONTAINER_NAME:-proxydev}-durabull
     build:
